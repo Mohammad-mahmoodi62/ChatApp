@@ -34,3 +34,7 @@ class responserNumber(var num: Int) : BaseMessage()
 @Serializable
 @SerialName("server-ready")
 class ServerIsReady() : BaseMessage()
+
+@Serializable
+@SerialName("chat-message")
+class ChatMessage(val message: String, val senderId: String, val receiverId: String) : BaseMessage()
