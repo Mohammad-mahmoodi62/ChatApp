@@ -7,4 +7,6 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+<!--   test for background f chat -->
+    <color name="colorPrimary">#2596be</color>
 </resources>
