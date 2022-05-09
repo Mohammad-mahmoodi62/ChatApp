@@ -1,6 +1,8 @@
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.example.learningkotlin.BaseMessage
+import com.example.learningkotlin.ChatMessage
+import com.example.learningkotlin.ConnectionHandler
 import com.example.learningkotlin.OwnedProject2
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.decodeFromString
@@ -21,6 +23,7 @@ class TcpServerSocket (portNumber: Int) {
     /*temp section*/
     private lateinit var textview: TextView
     private lateinit var activity: AppCompatActivity
+    var cHandler: ConnectionHandler? = null
 
     init {
         //TODO: make it work for every client
@@ -70,9 +73,10 @@ class TcpServerSocket (portNumber: Int) {
 
     private fun handleReceivedMsg(msg:BaseMessage) {
         when(msg.javaClass.getAnnotation(SerialName::class.java).value) {
-            "sam-service" -> this.activity.runOnUiThread{
-                this.textview.text = (msg as OwnedProject2).msg
-            }
+//            "sam-service" -> this.activity.runOnUiThread{
+//                this.textview.text = (msg as OwnedProject2).msg
+//            }
+            "chat-message" -> this.cHandler?.addChatToViewModel(msg as ChatMessage)
         }
     }
 
@@ -102,6 +106,7 @@ class TcpClientSocket(ipAddress: InetAddress, portNumber: Int) {
     /*temp section*/
     private lateinit var textview: TextView
     private lateinit var activity: AppCompatActivity
+    var cHandler: ConnectionHandler? = null
 
     init {
         val worker = Runnable {
@@ -145,9 +150,10 @@ class TcpClientSocket(ipAddress: InetAddress, portNumber: Int) {
     private fun handleReceivedMsg(msg:BaseMessage) {
 
         when(msg.javaClass.getAnnotation(SerialName::class.java).value) {
-            "sam-service" -> this.activity.runOnUiThread{
-                this.textview.text = (msg as OwnedProject2).msg
-            }
+//            "sam-service" -> this.activity.runOnUiThread{
+//                this.textview.text = (msg as OwnedProject2).msg
+//            }
+            "chat-message" -> this.cHandler?.addChatToViewModel(msg as ChatMessage)
         }
     }
 

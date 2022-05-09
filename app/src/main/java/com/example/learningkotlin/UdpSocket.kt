@@ -121,17 +121,23 @@ class UdpSocket(portNumber: Int) {
             "request-number" -> this.handleRequesterNumber(dp, msg as requesterNumber)
             "response-number" -> {
                 this.receivedRandomNumber = (msg as responserNumber).num
+                this.cHandler.otherId = this.receivedRandomNumber
                 this.decideWhoIsServer(dp.getAddress())
             }
-            "server-ready" -> this.cHandler.addClient(dp.getAddress())
+            "server-ready" -> {
+                this.cHandler.addClient(dp.getAddress())
+                this.cHandler.addUserToViewModel(this.receivedRandomNumber)
+            }
         }
     }
 
     private fun handleRequesterNumber(dp: DatagramPacket, rn: requesterNumber) {
         this.receivedRandomNumber = rn.num
+        this.cHandler.otherId = this.receivedRandomNumber
 
         var randomNumber = responserNumber((0..100).random())
         this.selfRandomNumber = randomNumber.num
+        this.cHandler.setSelfId(this.selfRandomNumber)
         val json = Json { encodeDefaults = true }
         val serialized = json.encodeToString(randomNumber as BaseMessage)
 
@@ -146,6 +152,7 @@ class UdpSocket(portNumber: Int) {
 
         var randomNumber = requesterNumber((0..100).random())
         this.selfRandomNumber = randomNumber.num
+        this.cHandler.setSelfId(this.selfRandomNumber)
         val json = Json { encodeDefaults = true }
         val serialized = json.encodeToString(randomNumber as BaseMessage)
 
@@ -164,9 +171,8 @@ class UdpSocket(portNumber: Int) {
         else
         {
             // this phone is server
-            BugRepoter.log("before decideWhoIsServer tostring of this ${this.toString()} tostring of chandler ${this.cHandler.toString()}")
             this?.cHandler?.startServer()
-            BugRepoter.log("after decideWhoIsServer")
+            this.cHandler.addUserToViewModel(this.receivedRandomNumber)
             var readyMsg = ServerIsReady()
             val json = Json { encodeDefaults = true }
             val serialized = json.encodeToString(readyMsg as BaseMessage)

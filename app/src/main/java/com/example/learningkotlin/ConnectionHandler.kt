@@ -6,6 +6,8 @@ import UdpSocket
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
+import kotlinx.serialization.SerialName
 import java.io.IOException
 import java.net.InetAddress
 import java.net.Socket
@@ -17,18 +19,59 @@ class ConnectionHandler {
     var _tcpServerSocket: TcpServerSocket? = null
     /*temp section*/
     private lateinit var textview: TextView
-    private lateinit var activity: AppCompatActivity
+    private lateinit var fragment: Fragment
+    private lateinit var userViewModel: UsersViewModel
+    private lateinit var chatViewModel: ChatViewModel
+    //temp argument
+    private var selfId: Int = 0
+    var otherId: Int = 0
+    var rand = false
 
     init {
         _udpSocket = UdpSocket(3000/*TODO: think about this later*/)
         _udpSocket?.setConnectionHandler(this)
 //        _tcpServerSocket = TcpServerSocket(4000)
 //        _tcpClientSocket.add(TcpClientSocket(InetAddress.getByName("192.168.1.147"), 4000))
+        //temp
+        this.selfId = (0..100).random()
+        this.otherId = (0..100).random()
     }
 
     fun findUsers() {
+//        val msg = "random user ${(0..100).random()}"
+//        this.addUserToViewModel((0..100).random())
+//        return
         val worker = Runnable { _udpSocket?.findUsers() }
         threadPool.run(worker)
+    }
+
+    //temp function
+    fun setUserViewModel(vh: UsersViewModel) {
+        this.userViewModel = vh
+    }
+
+    //temp function
+    fun setChatViewModel(vh: ChatViewModel) {
+        this.chatViewModel = vh
+    }
+
+    //temp function
+    fun addUserToViewModel(id: Int) {
+        this.userViewModel.addData(id.toString())
+    }
+
+    //temp function
+    fun addChatToViewModel(msg:ChatMessage) {
+        this.chatViewModel.addData(msg)
+    }
+
+    //temp function
+    fun setSelfId(id: Int) {
+        this.selfId = id
+    }
+
+    fun getSelfId(): Int {
+        return this.selfId
     }
 
 
@@ -51,10 +94,12 @@ class ConnectionHandler {
             BugRepoter.log("NullPointerException error when creating server socket ${e.message}")
         }
         _tcpClientSocket.add(socket)
-        _tcpClientSocket[0].setTxtView(this.textview, this.activity)
+//        _tcpClientSocket[0].setTxtView(this.textview, this.activity)
 
-        this.activity.runOnUiThread {
-            Toast.makeText(activity.applicationContext, "this phone is client", Toast.LENGTH_LONG).show()
+        this._tcpClientSocket[0].cHandler = this
+
+        this.fragment.activity?.runOnUiThread {
+            Toast.makeText(this.fragment.context, "this phone is client and self id is ${this.selfId}", Toast.LENGTH_LONG).show()
         }
     }
 
@@ -72,24 +117,37 @@ class ConnectionHandler {
         catch (e: IllegalArgumentException) {
             BugRepoter.log("IllegalArgumentException error when creating server socket ${e.message}")
         }
-        _tcpServerSocket?.setTxtView(this.textview, this.activity)
-        this.activity.runOnUiThread {
-            Toast.makeText(activity.applicationContext, "this phone is server", Toast.LENGTH_LONG).show()
+//        _tcpServerSocket?.setTxtView(this.textview, this.activity)
+        this.fragment.activity?.runOnUiThread {
+            Toast.makeText(this.fragment.context, "this phone is server and self id is ${this.selfId}", Toast.LENGTH_LONG).show()
         }
+        this._tcpServerSocket?.cHandler = this
     }
 
     fun sendMsg(msg: BaseMessage) {
+//        var msg: ChatMessage
+//
+//        if(rand) {
+//            msg = ChatMessage("random message ${(0..100).random()}", this.selfId.toString(),
+//                                this.otherId.toString())
+//        } else {
+//            msg = ChatMessage("random message ${(0..100).random()}", this.otherId.toString(),
+//                this.selfId.toString())
+//        }
+//        rand = !rand
+//        this.addChatToViewModel(msg)
+//        return
         //TODO: fix this later
+        if (msg.javaClass.getAnnotation(SerialName::class.java).value == "chat-message")
+            this.addChatToViewModel(msg as ChatMessage)
         _tcpServerSocket?.sendMsg(msg)
         if(_tcpClientSocket.isNotEmpty())
             _tcpClientSocket[0].sendMsg(msg)
     }
 
     //temp function
-    fun setTxtView(txtView: TextView, activity: AppCompatActivity) {
-        this.textview = txtView
-        this.activity = activity
-        _udpSocket?.setTxtView(this.textview, this.activity)
+    fun setFragment(fragment: Fragment) {
+        this.fragment = fragment
     }
 
 }
