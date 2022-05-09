@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TextView
+    xmlns:adnroid="http://schemas.android.com/apk/res/android"
+    adnroid:layout_width="match_parent"
+    adnroid:layout_height="wrap_content"
+    adnroid:textSize="16sp"
+    adnroid:padding="8dp" />
