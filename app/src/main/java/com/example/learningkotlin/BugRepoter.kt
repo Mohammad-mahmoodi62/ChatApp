@@ -1,5 +1,9 @@
 package com.example.learningkotlin
 
+import android.annotation.SuppressLint
+import com.jaredrummler.android.device.DeviceName
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import java.net.DatagramPacket
 import java.net.DatagramSocket
 import java.net.InetAddress
@@ -12,6 +16,7 @@ object BugRepoter {
     init {
         val worker = Runnable {
             socket = DatagramSocket(35000)
+            this.report = true
 
         }
         threadPool.run(worker)
@@ -22,17 +27,22 @@ object BugRepoter {
         this.log("I am running")
     }
 
+    @SuppressLint("SimpleDateFormat")
     fun log(msg: String) {
         if(!report)
             return
-        val worker = Runnable {
-            val sdf = SimpleDateFormat("dd/M/yyyy hh:mm:ss")
-            var currentDate = sdf.format(Date())
-            currentDate += " = "
-            currentDate += msg
-            val snd = DatagramPacket(currentDate.toByteArray(), currentDate.length, InetAddress.getByName("192.168.1.147"), 3500);
-            socket.send(snd)
+        runBlocking {
+            launch {
+                val sdf = SimpleDateFormat("dd/M/yyyy hh:mm:ss")
+                var sendMsg = "{${DeviceName.getDeviceName()}}[${sdf.format(Date())}]: $msg"
+                val snd = DatagramPacket(
+                    sendMsg.toByteArray(),
+                    sendMsg.length,
+                    InetAddress.getByName("192.168.1.147"),
+                    3500
+                );
+                socket.send(snd)
+            }
         }
-        threadPool.run(worker)
     }
 }
