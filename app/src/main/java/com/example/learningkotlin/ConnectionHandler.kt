@@ -7,6 +7,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import com.jaredrummler.android.device.DeviceName
 import kotlinx.serialization.SerialName
 import java.io.IOException
 import java.net.InetAddress
@@ -15,7 +16,7 @@ import java.net.Socket
 class ConnectionHandler {
     var _udpSocket: UdpSocket? = null
     //TODO: handle multiple clients
-    var _tcpClientSocket = mutableListOf<TcpClientSocket>()
+    var _tcpClientSocket = mutableMapOf<String, TcpClientSocket>()
     var _tcpServerSocket: TcpServerSocket? = null
     /*temp section*/
     private lateinit var textview: TextView
@@ -35,6 +36,23 @@ class ConnectionHandler {
         //temp
         this.selfId = (0..100).random()
         this.otherId = (0..100).random()
+
+        try {
+            this._tcpServerSocket = TcpServerSocket(4000) { user: UserInfo ->
+                this.addUserToViewModel(user)
+            }
+//            this._tcpServerSocket!!.startServer()
+            BugRepoter.log("server created")
+        }
+        catch (e: IOException) {
+            BugRepoter.log("IO error when creating server socket ${e.message}")
+        }
+        catch (e: SecurityException) {
+            BugRepoter.log("SecurityException error when creating server socket ${e.message}")
+        }
+        catch (e: IllegalArgumentException) {
+            BugRepoter.log("IllegalArgumentException error when creating server socket ${e.message}")
+        }
     }
 
     fun findUsers() {
@@ -56,11 +74,6 @@ class ConnectionHandler {
     }
 
     //temp function
-    fun addUserToViewModel(id: Int) {
-        this.userViewModel.addData(id.toString())
-    }
-
-    //temp function
     fun addChatToViewModel(msg:ChatMessage) {
         this.chatViewModel.addData(msg)
     }
@@ -79,7 +92,14 @@ class ConnectionHandler {
         BugRepoter.log("we reached in add client socket")
         lateinit var socket: TcpClientSocket
         try {
-            socket = TcpClientSocket(ipAddr, 4000)
+            socket = TcpClientSocket(ipAddr, 4000) { user: UserInfo ->
+                this.addUserToViewModel(user)
+            }
+            //TODO: move this to constructor
+            val selfInfo = UserInfo(Name = DeviceName.getDeviceName(), ID = "null")
+            val greetingMsg = HelloServer(selfInfo)
+            BugRepoter.log("helloServer Sent")
+            socket.sendMsg(greetingMsg as BaseMessage)
         }
         catch (e: IOException) {
             BugRepoter.log("IO error when creating server socket ${e.message}")
@@ -93,61 +113,18 @@ class ConnectionHandler {
         catch (e: NullPointerException) {
             BugRepoter.log("NullPointerException error when creating server socket ${e.message}")
         }
-        _tcpClientSocket.add(socket)
-//        _tcpClientSocket[0].setTxtView(this.textview, this.activity)
-
-        this._tcpClientSocket[0].cHandler = this
-
-        this.fragment.activity?.runOnUiThread {
-            Toast.makeText(this.fragment.context, "this phone is client and self id is ${this.selfId}", Toast.LENGTH_LONG).show()
-        }
+        _tcpClientSocket[ipAddr.toString()] = socket
     }
 
-    fun startServer() {
-        BugRepoter.log("we reached in add server socket")
-        try {
-            _tcpServerSocket = TcpServerSocket(4000)
-        }
-        catch (e: IOException) {
-            BugRepoter.log("IO error when creating server socket ${e.message}")
-        }
-        catch (e: SecurityException) {
-            BugRepoter.log("SecurityException error when creating server socket ${e.message}")
-        }
-        catch (e: IllegalArgumentException) {
-            BugRepoter.log("IllegalArgumentException error when creating server socket ${e.message}")
-        }
-//        _tcpServerSocket?.setTxtView(this.textview, this.activity)
-        this.fragment.activity?.runOnUiThread {
-            Toast.makeText(this.fragment.context, "this phone is server and self id is ${this.selfId}", Toast.LENGTH_LONG).show()
-        }
-        this._tcpServerSocket?.cHandler = this
+    fun sendMsg(msg: BaseMessage, ipAddr: String) {
+        if(ClientHandler.clientHandlers.contains(ipAddr))
+            ClientHandler.clientHandlers[ipAddr]?.sendMsg(msg)
+        else
+            this._tcpClientSocket[ipAddr]?.sendMsg(msg)
     }
 
-    fun sendMsg(msg: BaseMessage) {
-//        var msg: ChatMessage
-//
-//        if(rand) {
-//            msg = ChatMessage("random message ${(0..100).random()}", this.selfId.toString(),
-//                                this.otherId.toString())
-//        } else {
-//            msg = ChatMessage("random message ${(0..100).random()}", this.otherId.toString(),
-//                this.selfId.toString())
-//        }
-//        rand = !rand
-//        this.addChatToViewModel(msg)
-//        return
-        //TODO: fix this later
-        if (msg.javaClass.getAnnotation(SerialName::class.java).value == "chat-message")
-            this.addChatToViewModel(msg as ChatMessage)
-        _tcpServerSocket?.sendMsg(msg)
-        if(_tcpClientSocket.isNotEmpty())
-            _tcpClientSocket[0].sendMsg(msg)
-    }
-
-    //temp function
-    fun setFragment(fragment: Fragment) {
-        this.fragment = fragment
+    fun addUserToViewModel(user: UserInfo) {
+        this.userViewModel.addData(user.Name)
     }
 
 }

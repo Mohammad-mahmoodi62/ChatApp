@@ -109,10 +109,6 @@ class UdpSocket(portNumber: Int) {
                 this.cHandler.otherId = this.receivedRandomNumber
                 this.decideWhoIsServer(dp.address)
             }
-            "server-ready" -> {
-                this.cHandler.addClient(dp.address)
-                this.cHandler.addUserToViewModel(this.receivedRandomNumber)
-            }
         }
     }
 
@@ -149,22 +145,11 @@ class UdpSocket(portNumber: Int) {
     private fun decideWhoIsServer(ipAddress: InetAddress) {
         BugRepoter.log("inside decideWhoIsServer")
 
-        if (this.receivedRandomNumber > this.selfRandomNumber)
-        {
-            // this phone is client
+        if (this.receivedRandomNumber > this.selfRandomNumber) {
+            this.cHandler.addClient(ipAddress)
+            BugRepoter.log("I am client")
         }
-        else
-        {
-            // this phone is server
-            this.cHandler.startServer()
-            this.cHandler.addUserToViewModel(this.receivedRandomNumber)
-            val readyMsg = ServerIsReady()
-            val json = Json { encodeDefaults = true }
-            val serialized = json.encodeToString(readyMsg as BaseMessage)
-
-            val msg = DatagramPacket(serialized.toByteArray(), serialized.length, ipAddress, 3000)
-            _socket.send(msg)
-        }
+        else BugRepoter.log("I am server")
 
     }
 
