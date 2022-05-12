@@ -32,9 +32,17 @@ class requesterNumber(var num: Int) : BaseMessage()
 class responserNumber(var num: Int) : BaseMessage()
 
 @Serializable
-@SerialName("server-ready")
-class ServerIsReady() : BaseMessage()
-
-@Serializable
 @SerialName("chat-message")
 class ChatMessage(val message: String, val senderId: String, val receiverId: String) : BaseMessage()
+
+@Serializable
+class UserInfo(val ID: String, val Name: String) : BaseMessage()
+
+
+@Serializable
+@SerialName("greetings-server")
+class HelloServer(val user: UserInfo) : BaseMessage()
+
+@Serializable
+@SerialName("greetings-client")
+class HelloClient(val user: UserInfo) : BaseMessage()
