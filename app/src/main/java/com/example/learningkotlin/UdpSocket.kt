@@ -1,13 +1,9 @@
-import android.widget.TextView
-import androidx.appcompat.app.AppCompatActivity
 import com.example.learningkotlin.*
 import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.net.*
-import kotlin.concurrent.thread
 
 
 
@@ -22,19 +18,14 @@ class UdpSocket(portNumber: Int) {
     private var receivedRandomNumber: Int = 0
     lateinit var cHandler: ConnectionHandler
     private lateinit var selfIP: String
-    /*temp section*/
-    private lateinit var textview: TextView
-    private lateinit var activity: AppCompatActivity
 
 
     init {
         val worker = Runnable {
-            val test = InetAddress. getLocalHost()
             this._socket = DatagramSocket(portNumber)
-            val test2 = _socket.getLocalAddress()
             this.fillBroadcastIpAddresses()
             this.receiveBool = true
-            this.selfIP = this.getIpv4HostAddress()
+            this.selfIP = this.getIpv4HostAddress()!!
             val worker = Runnable {
                 this.receiver()
             }
@@ -43,21 +34,15 @@ class UdpSocket(portNumber: Int) {
         threadPool.run(worker)
     }
 
-    //temp function
-    fun setTxtView(txtView: TextView, activity: AppCompatActivity) {
-        this.textview = txtView
-        this.activity = activity
-    }
-
     fun findUsers() {
-        var broadcastMessage = revealMessage()
+        val broadcastMessage = revealMessage()
         val json = Json { encodeDefaults = true }
         val serialized = json.encodeToString(broadcastMessage as BaseMessage)
-//        for(bca in broadcastIps)
-//        {
-            val msg = DatagramPacket(serialized.toByteArray(), serialized.length, InetAddress.getByName("192.168.1.255"), 3000);
+        for(bca in broadcastIps)
+        {
+            val msg = DatagramPacket(serialized.toByteArray(), serialized.length, bca, 3000)
             _socket.send(msg)
-//        }
+        }
     }
 
     fun setConnectionHandler(ch: ConnectionHandler) {
@@ -104,7 +89,7 @@ class UdpSocket(portNumber: Int) {
         }
     }
 
-    fun getIpv4HostAddress(): String {
+    private fun getIpv4HostAddress(): String? {
         NetworkInterface.getNetworkInterfaces()?.toList()?.map { networkInterface ->
             networkInterface.inetAddresses?.toList()?.find {
                 !it.isLoopbackAddress && it is Inet4Address
@@ -122,10 +107,10 @@ class UdpSocket(portNumber: Int) {
             "response-number" -> {
                 this.receivedRandomNumber = (msg as responserNumber).num
                 this.cHandler.otherId = this.receivedRandomNumber
-                this.decideWhoIsServer(dp.getAddress())
+                this.decideWhoIsServer(dp.address)
             }
             "server-ready" -> {
-                this.cHandler.addClient(dp.getAddress())
+                this.cHandler.addClient(dp.address)
                 this.cHandler.addUserToViewModel(this.receivedRandomNumber)
             }
         }
@@ -135,28 +120,28 @@ class UdpSocket(portNumber: Int) {
         this.receivedRandomNumber = rn.num
         this.cHandler.otherId = this.receivedRandomNumber
 
-        var randomNumber = responserNumber((0..100).random())
+        val randomNumber = responserNumber((0..100).random())
         this.selfRandomNumber = randomNumber.num
         this.cHandler.setSelfId(this.selfRandomNumber)
         val json = Json { encodeDefaults = true }
         val serialized = json.encodeToString(randomNumber as BaseMessage)
 
-        val msg = DatagramPacket(serialized.toByteArray(), serialized.length, dp?.getAddress(), 3000);
+        val msg = DatagramPacket(serialized.toByteArray(), serialized.length, dp.address, 3000)
         _socket.send(msg)
 
-        this.decideWhoIsServer(dp?.getAddress())
+        this.decideWhoIsServer(dp.address)
     }
 
     private fun handleIdentificationMsg(dp: DatagramPacket) {
-        revealResponseUsers.add(dp?.getAddress())
+        revealResponseUsers.add(dp.address)
 
-        var randomNumber = requesterNumber((0..100).random())
+        val randomNumber = requesterNumber((0..100).random())
         this.selfRandomNumber = randomNumber.num
         this.cHandler.setSelfId(this.selfRandomNumber)
         val json = Json { encodeDefaults = true }
         val serialized = json.encodeToString(randomNumber as BaseMessage)
 
-        val msg = DatagramPacket(serialized.toByteArray(), serialized.length, dp?.getAddress(), 3000);
+        val msg = DatagramPacket(serialized.toByteArray(), serialized.length, dp.address, 3000)
         _socket.send(msg)
 
     }
@@ -171,25 +156,25 @@ class UdpSocket(portNumber: Int) {
         else
         {
             // this phone is server
-            this?.cHandler?.startServer()
+            this.cHandler.startServer()
             this.cHandler.addUserToViewModel(this.receivedRandomNumber)
-            var readyMsg = ServerIsReady()
+            val readyMsg = ServerIsReady()
             val json = Json { encodeDefaults = true }
             val serialized = json.encodeToString(readyMsg as BaseMessage)
 
-            val msg = DatagramPacket(serialized.toByteArray(), serialized.length, ipAddress, 3000);
+            val msg = DatagramPacket(serialized.toByteArray(), serialized.length, ipAddress, 3000)
             _socket.send(msg)
         }
 
     }
 
     private fun identifySelf(dp:DatagramPacket) {
-        revealRequestUsers.add(dp?.getAddress())
-        var broadcastMessage = hereIAm()
+        revealRequestUsers.add(dp.address)
+        val broadcastMessage = hereIAm()
         val json = Json { encodeDefaults = true }
         val serialized = json.encodeToString(broadcastMessage as BaseMessage)
 
-        val msg = DatagramPacket(serialized.toByteArray(), serialized.length, dp?.getAddress(), 3000);
+        val msg = DatagramPacket(serialized.toByteArray(), serialized.length, dp.address, 3000)
         _socket.send(msg)
     }
 
@@ -198,8 +183,8 @@ class UdpSocket(portNumber: Int) {
             val json = Json { encodeDefaults = true }
             val serialized = json.encodeToString(msg)
             //TODO: get port from the other user
-            val msg = DatagramPacket(serialized.toByteArray(), serialized.length, revealResponseUsers[0], 3000);
-            _socket.send(msg)
+            val sendMsg = DatagramPacket(serialized.toByteArray(), serialized.length, revealResponseUsers[0], 3000)
+            _socket.send(sendMsg)
         }
         threadPool.run(worker)
     }
