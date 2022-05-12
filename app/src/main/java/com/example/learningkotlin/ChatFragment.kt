@@ -48,7 +48,7 @@ class ChatFragment : Fragment() {
                     (activity as? MainActivity)?.test?.getSelfId().toString(),
                     (activity as? MainActivity)?.test?.otherId.toString())
 
-                (activity as? MainActivity)?.test?.sendMsg(chatMsg)
+                (activity as? MainActivity)?.test?.sendMsg(chatMsg, "")
                 this.activity?.runOnUiThread { userMsg.setText("") }
             }
             threadPool.run(worker)

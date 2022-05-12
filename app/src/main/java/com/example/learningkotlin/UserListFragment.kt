@@ -19,7 +19,6 @@ class UserListFragment : Fragment() {
     ): View? {
 
         //temp
-        (activity as? MainActivity)?.test?.setFragment(this)
         // Inflate the layout for this fragment
         val view = inflater.inflate(R.layout.fragment_user_list, container, false)
 //        textview = findViewById<TextView>(R.id.textView)
