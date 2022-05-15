@@ -6,24 +6,26 @@ import androidx.lifecycle.ViewModel
 import java.text.FieldPosition
 
 class UsersViewModel : ViewModel() {
-    private var _userList = MutableLiveData<List<String>>()
-    val userList: LiveData<List<String>> = _userList
+    private var _userList = MutableLiveData<List<UserInfo>>()
+    val userList: LiveData<List<UserInfo>> = _userList
 
-    private val _navigateToUer = MutableLiveData<Int?>()
-    val navigateToUer: MutableLiveData<Int?>
+    private val _navigateToUer = MutableLiveData<String?>()
+    val navigateToUer: MutableLiveData<String?>
         get() = _navigateToUer
 
-    fun addData(name:String) {
-        var currentValue: MutableList<String>? = _userList.value as MutableList<String>?
+
+
+    fun addData(user:UserInfo) {
+        var currentValue: MutableList<UserInfo>? = _userList.value as MutableList<UserInfo>?
         if(currentValue == null)
-            currentValue = mutableListOf(name)
+            currentValue = mutableListOf(user)
         else
-        currentValue?.add(name)
+        currentValue?.add(user)
         _userList.postValue(currentValue!!)
     }
 
-    fun onUserClicked(position: Int) {
-        _navigateToUer.value = position
+    fun onUserClicked(userID: String) {
+        _navigateToUer.value = userID
     }
 
     fun onUserNavigated() {
