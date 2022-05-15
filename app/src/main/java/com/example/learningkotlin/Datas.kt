@@ -36,7 +36,7 @@ class responserNumber(var num: Int) : BaseMessage()
 class ChatMessage(val message: String, val senderId: String, val receiverId: String) : BaseMessage()
 
 @Serializable
-class UserInfo(val ID: String, val Name: String) : BaseMessage()
+class UserInfo(val ID: String, val Name: String, var IP: String) : BaseMessage()
 
 
 @Serializable
