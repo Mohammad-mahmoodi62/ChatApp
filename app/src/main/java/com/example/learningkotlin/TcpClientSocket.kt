@@ -1,5 +1,3 @@
-import android.widget.TextView
-import androidx.appcompat.app.AppCompatActivity
 import com.example.learningkotlin.*
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.decodeFromString
@@ -11,12 +9,14 @@ import java.net.InetAddress
 import java.net.Socket
 import kotlin.concurrent.thread
 
-class TcpClientSocket(ipAddress: InetAddress, portNumber: Int,
-                      val addToView: (user: UserInfo) -> Unit) {
+class TcpClientSocket(
+    val ipAddress: InetAddress, portNumber: Int,
+    val addToView: (user: UserInfo) -> Unit,
+    val removeFromMap: (String) -> Unit
+) {
     private lateinit var _socket: Socket
     private lateinit var _outputStream: DataOutputStream
     private lateinit var _inputStream: DataInputStream
-    private var _receiverBool: Boolean = false
     /*temp section*/
     var cHandler: ConnectionHandler? = null
 
@@ -25,7 +25,6 @@ class TcpClientSocket(ipAddress: InetAddress, portNumber: Int,
             this._socket = Socket(ipAddress, portNumber)
             this._outputStream = DataOutputStream(_socket.getOutputStream())
             this._inputStream = DataInputStream(_socket.getInputStream())
-            this._receiverBool = true
             thread {
                 this.receive()
             }
@@ -34,7 +33,7 @@ class TcpClientSocket(ipAddress: InetAddress, portNumber: Int,
     }
 
     private fun receive() {
-        while (this._receiverBool) {
+        while (this._socket.isConnected) {
             lateinit var deserialized: BaseMessage
             try {
                 var message = _inputStream.readUTF()
@@ -65,7 +64,12 @@ class TcpClientSocket(ipAddress: InetAddress, portNumber: Int,
 //                this.textview.text = (msg as OwnedProject2).msg
 //            }
 //            "chat-message" -> this.cHandler?.addChatToViewModel(msg as ChatMessage)
-            "greetings-client" -> this.addToView((msg as HelloClient).user)
+            "greetings-client" -> {
+                (msg as HelloClient).user.IP = this.ipAddress.toString()
+                this.addToView((msg as HelloClient).user)
+            }
+            "chat-message" -> ConnectionHandler.addChatMsgToMap(this.ipAddress.toString(),
+                                                                msg as ChatMessage)
         }
     }
 
@@ -79,9 +83,9 @@ class TcpClientSocket(ipAddress: InetAddress, portNumber: Int,
     }
 
     fun destroyObject() {
+        this.removeFromMap(this._socket.inetAddress.toString())
         this._socket.close()
         this._inputStream.close()
         this._outputStream.close()
-        this._receiverBool = false
     }
 }

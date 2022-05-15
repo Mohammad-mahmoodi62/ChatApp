@@ -10,6 +10,7 @@ import java.io.DataInputStream
 import java.io.DataOutputStream
 import java.io.IOException
 import java.net.*
+import java.util.*
 import kotlin.concurrent.thread
 
 class TcpServerSocket (portNumber: Int, val addToView: (user: UserInfo) -> Unit) {
@@ -60,7 +61,7 @@ class ClientHandler (private val _socket: Socket, val addToView: (user: UserInfo
         try {
             this._outputStream = DataOutputStream(_socket.getOutputStream())
             this._inputStream = DataInputStream(_socket.getInputStream())
-            ClientHandler.clientHandlers[this._socket.localAddress.toString()] = this
+            ClientHandler.clientHandlers[this._socket.inetAddress.toString()] = this
 
             //TODO: change it to nonblocking operations
             Thread(
@@ -124,11 +125,14 @@ class ClientHandler (private val _socket: Socket, val addToView: (user: UserInfo
 //            }
 //            "chat-message" -> this.cHandler?.addChatToViewModel(msg as ChatMessage)
             "greetings-server" -> {
+                (msg as HelloServer).user.IP = this._socket.inetAddress.toString()
                 this.addToView((msg as HelloServer).user)
-                val selfInfo = UserInfo(Name = DeviceName.getDeviceName(), ID = "null")
+                val selfInfo = UserInfo(Name = DeviceName.getDeviceName(), ID = UUID.randomUUID().toString(), IP = "")
                 val greetingMsg = HelloClient(selfInfo)
                 this.sendMsg(greetingMsg as BaseMessage)
             }
+            "chat-message" -> ConnectionHandler.addChatMsgToMap(this._socket.inetAddress.toString(),
+                msg as ChatMessage)
         }
     }
 

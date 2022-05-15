@@ -4,14 +4,14 @@ import TcpClientSocket
 import TcpServerSocket
 import UdpSocket
 import android.widget.TextView
-import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.liveData
 import com.jaredrummler.android.device.DeviceName
-import kotlinx.serialization.SerialName
 import java.io.IOException
 import java.net.InetAddress
-import java.net.Socket
+import java.util.*
 
 class ConnectionHandler {
     var _udpSocket: UdpSocket? = null
@@ -26,7 +26,6 @@ class ConnectionHandler {
     //temp argument
     private var selfId: Int = 0
     var otherId: Int = 0
-    var rand = false
 
     init {
         _udpSocket = UdpSocket(3000/*TODO: think about this later*/)
@@ -73,10 +72,6 @@ class ConnectionHandler {
         this.chatViewModel = vh
     }
 
-    //temp function
-    fun addChatToViewModel(msg:ChatMessage) {
-        this.chatViewModel.addData(msg)
-    }
 
     //temp function
     fun setSelfId(id: Int) {
@@ -92,11 +87,11 @@ class ConnectionHandler {
         BugRepoter.log("we reached in add client socket")
         lateinit var socket: TcpClientSocket
         try {
-            socket = TcpClientSocket(ipAddr, 4000) { user: UserInfo ->
+            socket = TcpClientSocket(ipAddr, 4000, { user: UserInfo ->
                 this.addUserToViewModel(user)
-            }
+            }) { ip: String -> this.removeFromClientsMap(ip) }
             //TODO: move this to constructor
-            val selfInfo = UserInfo(Name = DeviceName.getDeviceName(), ID = "null")
+            val selfInfo = UserInfo(Name = DeviceName.getDeviceName(), ID = UUID.randomUUID().toString(), IP = "")
             val greetingMsg = HelloServer(selfInfo)
             BugRepoter.log("helloServer Sent")
             socket.sendMsg(greetingMsg as BaseMessage)
@@ -124,7 +119,49 @@ class ConnectionHandler {
     }
 
     fun addUserToViewModel(user: UserInfo) {
-        this.userViewModel.addData(user.Name)
+        ConnectionHandler.addUserToConnectedList(user)
+        this.userViewModel.addData(user)
+    }
+
+    fun removeFromClientsMap(ip: String) {
+        this._tcpClientSocket.remove(ip)
+    }
+
+    companion object {
+        private var connectedUsers = mutableSetOf<UserInfo>()
+        private var usersMsgList = mutableMapOf<String, MutableLiveData<List<ChatMessage>>>()
+
+        fun getUser(ID: String) : UserInfo? {
+            for (user in connectedUsers)
+                if(user.ID == ID)
+                    return user
+            return null
+        }
+
+        fun addUserToConnectedList(newUser: UserInfo) {
+            for(user in connectedUsers)
+                if(user.ID == newUser.ID)
+                    return
+
+            connectedUsers.add(newUser)
+        }
+
+        fun addChatMsgToMap(IP: String, chatMsg: ChatMessage) {
+
+            if(!usersMsgList.contains(IP))
+                usersMsgList[IP] = MutableLiveData(mutableListOf(chatMsg))
+            else {
+                val currentValue = usersMsgList[IP]?.value as MutableList<ChatMessage>
+                currentValue.add(chatMsg)
+                usersMsgList[IP]?.postValue(currentValue)
+            }
+        }
+
+        fun getMsgList(IP: String):  MutableLiveData<List<ChatMessage>>?{
+            if(!usersMsgList.contains(IP))
+                usersMsgList[IP] = MutableLiveData(mutableListOf())
+            return usersMsgList[IP]
+        }
     }
 
 }
