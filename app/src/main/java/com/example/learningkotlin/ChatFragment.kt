@@ -23,7 +23,12 @@ class ChatFragment : Fragment() {
 
         val chatRecyclerView = view.findViewById<RecyclerView>(R.id.chat_recycler_view)
 
-        val viewModel = ViewModelProvider(this).get(ChatViewModel::class.java)
+        val userID = ChatFragmentArgs.fromBundle(requireArguments()).userID
+        val currentUser = ConnectionHandler.getUser(userID)
+
+        val viewModelFactory = ChatViewModelFactory(currentUser!!.IP)
+        val viewModel = ViewModelProvider(
+            this, viewModelFactory).get(ChatViewModel::class.java)
         //temp
         (activity as? MainActivity)?.test?.setChatViewModel(viewModel)
 
@@ -33,7 +38,7 @@ class ChatFragment : Fragment() {
 
         adapter.selfId = (activity as? MainActivity)?.test?.getSelfId()!!
 
-        viewModel.msgList.observe(this.viewLifecycleOwner, Observer {
+        viewModel.msgList!!.observe(this.viewLifecycleOwner, Observer {
             it?.let {
                 adapter.submitList(it.toMutableList())
             }
@@ -48,7 +53,8 @@ class ChatFragment : Fragment() {
                     (activity as? MainActivity)?.test?.getSelfId().toString(),
                     (activity as? MainActivity)?.test?.otherId.toString())
 
-                (activity as? MainActivity)?.test?.sendMsg(chatMsg, "")
+                ConnectionHandler.addChatMsgToMap(currentUser!!.IP,chatMsg)
+                (activity as? MainActivity)?.test?.sendMsg(chatMsg, currentUser!!.IP)
                 this.activity?.runOnUiThread { userMsg.setText("") }
             }
             threadPool.run(worker)
