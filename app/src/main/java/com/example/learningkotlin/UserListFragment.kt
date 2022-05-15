@@ -28,8 +28,8 @@ class UserListFragment : Fragment() {
         //tempt
         (activity as? MainActivity)?.test?.setUserViewModel(viewModel)
 
-        val adapter = FoundUserAdapter { pos ->
-            viewModel.onUserClicked(pos)
+        val adapter = FoundUserAdapter { UserID ->
+            viewModel.onUserClicked(UserID)
         }
 
         foundUsersList.adapter = adapter
@@ -42,10 +42,10 @@ class UserListFragment : Fragment() {
         })
 
         //TODO: pass the user id of chatting
-        viewModel.navigateToUer.observe(this.viewLifecycleOwner, Observer { position ->
-            position?.let {
+        viewModel.navigateToUer.observe(this.viewLifecycleOwner, Observer { UserID ->
+            UserID?.let {
                 val action = UserListFragmentDirections
-                    .actionUserListFragmentToChatFragment(position)
+                    .actionUserListFragmentToChatFragment(UserID)
                 this.findNavController().navigate(action)
                 viewModel.onUserNavigated()
             }

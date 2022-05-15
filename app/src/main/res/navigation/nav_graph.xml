@@ -23,8 +23,8 @@
         android:label="chat_fragment" >
 
         <argument
-            android:name="position"
-            app:argType="integer"
+            android:name="userID"
+            app:argType="string"
             />
         <action
             android:id="@+id/action_ChatFragment_to_userListFragment"

@@ -7,14 +7,14 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 
-class FoundUserAdapter(val clickListener: (pos: Int) -> Unit) : ListAdapter<String, FoundUserAdapter.FoundUserViewHolder>(UserDiffItemCallback()) {
+class FoundUserAdapter(val clickListener: (UserID: String) -> Unit) : ListAdapter<UserInfo, FoundUserAdapter.FoundUserViewHolder>(UserDiffItemCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int):
             FoundUserViewHolder = FoundUserViewHolder.inflateFrom(parent)
 
     override fun onBindViewHolder(holder: FoundUserViewHolder, position: Int) {
         val item = getItem(position)
-        holder.bind(item, position, this.clickListener)
+        holder.bind(item, this.clickListener)
     }
 
     class FoundUserViewHolder(val rootView: TextView)
@@ -29,10 +29,10 @@ class FoundUserAdapter(val clickListener: (pos: Int) -> Unit) : ListAdapter<Stri
                 }
             }
 
-        fun bind(user: String, pos: Int, clickListener: (pos: Int) -> Unit) {
-            rootView.text = user
+        fun bind(user: UserInfo, clickListener: (UserID: String) -> Unit) {
+            rootView.text = user.Name
             rootView.setOnClickListener {
-                clickListener(pos)
+                clickListener(user.ID)
             }
         }
 
