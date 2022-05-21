@@ -16,8 +16,8 @@ import java.util.*
 class ConnectionHandler {
     var _udpSocket: UdpSocket? = null
     //TODO: handle multiple clients
-    var _tcpClientSocket = mutableMapOf<String, TcpClientSocket>()
-    var _tcpServerSocket: TcpServerSocket? = null
+    private var _tcpClientSocket = mutableMapOf<String, TcpClientSocket>()
+    private var _tcpServerSocket: TcpServerSocket? = null
     /*temp section*/
     private lateinit var textview: TextView
     private lateinit var fragment: Fragment
