@@ -4,7 +4,7 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.net.*
-
+import kotlin.experimental.and
 
 
 class UdpSocket(portNumber: Int) {
@@ -18,11 +18,13 @@ class UdpSocket(portNumber: Int) {
     private var receivedRandomNumber: Int = 0
     lateinit var cHandler: ConnectionHandler
     private lateinit var selfIP: String
+    private lateinit var _keyAgreement: KeyAgreement
 
 
     init {
         val worker = Runnable {
             this._socket = DatagramSocket(portNumber)
+            this._keyAgreement = KeyAgreement()
             this.fillBroadcastIpAddresses()
             this.receiveBool = true
             this.selfIP = this.getIpv4HostAddress()!!
@@ -35,7 +37,7 @@ class UdpSocket(portNumber: Int) {
     }
 
     fun findUsers() {
-        val broadcastMessage = revealMessage()
+        val broadcastMessage = RevealMessage()
         val json = Json { encodeDefaults = true }
         val serialized = json.encodeToString(broadcastMessage as BaseMessage)
         for(bca in broadcastIps)
@@ -103,20 +105,47 @@ class UdpSocket(portNumber: Int) {
         when (msg.javaClass.getAnnotation(SerialName::class.java).value) {
             "identify-your-self-msg" -> this.identifySelf(dp)
             "identification-msg" -> this.handleIdentificationMsg(dp)
-            "request-number" -> this.handleRequesterNumber(dp, msg as requesterNumber)
+            "request-number" -> this.handleRequesterNumber(dp, msg as RequesterNumber)
             "response-number" -> {
-                this.receivedRandomNumber = (msg as responserNumber).num
+                this.receivedRandomNumber = (msg as ResponderNumber).num
                 this.cHandler.otherId = this.receivedRandomNumber
                 this.decideWhoIsServer(dp.address)
+            }
+            "alice-public-key" -> {
+                this.handleAlicePubKey(dp, msg as AlicePubKey)
+            }
+            "bob-public-key" -> {
+                this.handleBobPubKey(msg as BobPubKey, dp)
             }
         }
     }
 
-    private fun handleRequesterNumber(dp: DatagramPacket, rn: requesterNumber) {
+    private fun handleBobPubKey(bpk: BobPubKey, dp: DatagramPacket) {
+        val secretKey = this._keyAgreement.aliceGenerateSecretKey(bpk.pubKey)
+        val reportMsg = "Alice secret key is ${toHexString(secretKey.encoded)}"
+        BugRepoter.log(reportMsg)
+        this.cHandler.addClient(dp.address)
+    }
+
+    private fun handleAlicePubKey(dp: DatagramPacket, apk: AlicePubKey) {
+        val msg = BobPubKey(this._keyAgreement.generateBobPublicKey(apk.pubKey))
+        val json = Json { encodeDefaults = true }
+        val serialized = json.encodeToString(msg as BaseMessage)
+
+        val sendMsg = DatagramPacket(serialized.toByteArray(), serialized.length, dp.address, 3000)
+        _socket.send(sendMsg)
+
+        val secretKey = this._keyAgreement.bobGenerateSecretKey()
+        val reportMsg = "Bob secret key is ${toHexString(secretKey.encoded)}"
+        BugRepoter.log(reportMsg)
+
+    }
+
+    private fun handleRequesterNumber(dp: DatagramPacket, rn: RequesterNumber) {
         this.receivedRandomNumber = rn.num
         this.cHandler.otherId = this.receivedRandomNumber
 
-        val randomNumber = responserNumber((0..100).random())
+        val randomNumber = ResponderNumber((0..100).random())
         this.selfRandomNumber = randomNumber.num
         this.cHandler.setSelfId(this.selfRandomNumber)
         val json = Json { encodeDefaults = true }
@@ -131,7 +160,7 @@ class UdpSocket(portNumber: Int) {
     private fun handleIdentificationMsg(dp: DatagramPacket) {
         revealResponseUsers.add(dp.address)
 
-        val randomNumber = requesterNumber((0..100).random())
+        val randomNumber = RequesterNumber((0..100).random())
         this.selfRandomNumber = randomNumber.num
         this.cHandler.setSelfId(this.selfRandomNumber)
         val json = Json { encodeDefaults = true }
@@ -146,16 +175,28 @@ class UdpSocket(portNumber: Int) {
         BugRepoter.log("inside decideWhoIsServer")
 
         if (this.receivedRandomNumber > this.selfRandomNumber) {
-            this.cHandler.addClient(ipAddress)
+            //this.cHandler.addClient(ipAddress)
+            this.sendAlicePubKey(ipAddress)
             BugRepoter.log("I am client")
         }
-        else BugRepoter.log("I am server")
+        else{
+            BugRepoter.log("I am server")
+        }
 
+    }
+
+    private fun sendAlicePubKey(ipAddress: InetAddress) {
+        val msg = AlicePubKey(this._keyAgreement.generateAlicePublicKey())
+        val json = Json { encodeDefaults = true }
+        val serialized = json.encodeToString(msg as BaseMessage)
+
+        val sendMsg = DatagramPacket(serialized.toByteArray(), serialized.length, ipAddress, 3000)
+        _socket.send(sendMsg)
     }
 
     private fun identifySelf(dp:DatagramPacket) {
         revealRequestUsers.add(dp.address)
-        val broadcastMessage = hereIAm()
+        val broadcastMessage = HereIAm()
         val json = Json { encodeDefaults = true }
         val serialized = json.encodeToString(broadcastMessage as BaseMessage)
 
@@ -182,4 +223,28 @@ class UdpSocket(portNumber: Int) {
         this._socket.close()
         this.receiveBool = false
     }
+}
+
+
+fun byte2hex(b: Byte, buf: StringBuffer) {
+    val hexChars = charArrayOf(
+        '0', '1', '2', '3', '4', '5', '6', '7', '8',
+        '9', 'A', 'B', 'C', 'D', 'E', 'F'
+    )
+    val high: Int = (b.toInt() and 0xf0) shr 4
+    val low: Byte = b and 0x0f
+    buf.append(hexChars[high])
+    buf.append(hexChars[low.toInt()])
+}
+
+fun toHexString(block: ByteArray): String {
+    val buf = StringBuffer()
+    val len = block.size
+    for (i in 0 until len) {
+        byte2hex(block[i], buf)
+        if (i < len - 1) {
+            buf.append(":")
+        }
+    }
+    return buf.toString()
 }
