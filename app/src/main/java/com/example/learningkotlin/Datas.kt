@@ -14,22 +14,22 @@ class OwnedProject2(var msg: String, var owner: String) : BaseMessage()
 
 @Serializable
 @SerialName("identify-your-self-msg")
-class revealMessage() : BaseMessage()
+class RevealMessage() : BaseMessage()
 
 
 @Serializable
 @SerialName("identification-msg")
-class hereIAm() : BaseMessage()
+class HereIAm() : BaseMessage()
 
 
 @Serializable
 @SerialName("request-number")
-class requesterNumber(var num: Int) : BaseMessage()
+class RequesterNumber(var num: Int) : BaseMessage()
 
 
 @Serializable
 @SerialName("response-number")
-class responserNumber(var num: Int) : BaseMessage()
+class ResponderNumber(var num: Int) : BaseMessage()
 
 @Serializable
 @SerialName("chat-message")
@@ -46,3 +46,11 @@ class HelloServer(val user: UserInfo) : BaseMessage()
 @Serializable
 @SerialName("greetings-client")
 class HelloClient(val user: UserInfo) : BaseMessage()
+
+@Serializable
+@SerialName("alice-public-key")
+class AlicePubKey(val pubKey:ByteArray) : BaseMessage()
+
+@Serializable
+@SerialName("bob-public-key")
+class BobPubKey(val pubKey:ByteArray) : BaseMessage()
