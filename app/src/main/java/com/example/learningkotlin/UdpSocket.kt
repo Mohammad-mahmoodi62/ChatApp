@@ -121,10 +121,8 @@ class UdpSocket(portNumber: Int) {
     }
 
     private fun handleBobPubKey(bpk: BobPubKey, dp: DatagramPacket) {
-        val secretKey = this._keyAgreement.aliceGenerateSecretKey(bpk.pubKey)
-        val reportMsg = "Alice secret key is ${toHexString(secretKey.encoded)}"
-        BugRepoter.log(reportMsg)
-        this.cHandler.addClient(dp.address)
+        val keys = this._keyAgreement.aliceGenerateNeededKeys(bpk.pubKey)
+        this.cHandler.addClient(dp.address, keys)
     }
 
     private fun handleAlicePubKey(dp: DatagramPacket, apk: AlicePubKey) {
@@ -135,9 +133,8 @@ class UdpSocket(portNumber: Int) {
         val sendMsg = DatagramPacket(serialized.toByteArray(), serialized.length, dp.address, 3000)
         _socket.send(sendMsg)
 
-        val secretKey = this._keyAgreement.bobGenerateSecretKey()
-        val reportMsg = "Bob secret key is ${toHexString(secretKey.encoded)}"
-        BugRepoter.log(reportMsg)
+        val keys = this._keyAgreement.bobGenerateNeededKeys()
+        ClientHandler.clientKeys[dp.address.toString()] = keys
 
     }
 
@@ -176,8 +173,8 @@ class UdpSocket(portNumber: Int) {
 
         if (this.receivedRandomNumber > this.selfRandomNumber) {
             //this.cHandler.addClient(ipAddress)
-            this.sendAlicePubKey(ipAddress)
             BugRepoter.log("I am client")
+            this.sendAlicePubKey(ipAddress)
         }
         else{
             BugRepoter.log("I am server")

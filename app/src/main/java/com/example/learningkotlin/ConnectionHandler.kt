@@ -12,6 +12,7 @@ import com.jaredrummler.android.device.DeviceName
 import java.io.IOException
 import java.net.InetAddress
 import java.util.*
+import javax.crypto.SecretKey
 
 class ConnectionHandler {
     var _udpSocket: UdpSocket? = null
@@ -83,11 +84,10 @@ class ConnectionHandler {
     }
 
 
-    fun addClient(ipAddr: InetAddress) {
-        BugRepoter.log("we reached in add client socket")
+    fun addClient(ipAddr: InetAddress, keys: Triple<SecretKey, SecretKey, ByteArray>) {
         lateinit var socket: TcpClientSocket
         try {
-            socket = TcpClientSocket(ipAddr, 4000, { user: UserInfo ->
+            socket = TcpClientSocket(ipAddr, 4000, keys, { user: UserInfo ->
                 this.addUserToViewModel(user)
             }) { ip: String -> this.removeFromClientsMap(ip) }
             //TODO: move this to constructor
