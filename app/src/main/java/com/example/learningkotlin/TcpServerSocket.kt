@@ -9,8 +9,10 @@ import kotlinx.serialization.json.Json
 import java.io.DataInputStream
 import java.io.DataOutputStream
 import java.io.IOException
+import java.lang.Exception
 import java.net.*
 import java.util.*
+import javax.crypto.SecretKey
 import kotlin.concurrent.thread
 
 class TcpServerSocket (portNumber: Int, val addToView: (user: UserInfo) -> Unit) {
@@ -52,16 +54,21 @@ class TcpServerSocket (portNumber: Int, val addToView: (user: UserInfo) -> Unit)
 class ClientHandler (private val _socket: Socket, val addToView: (user: UserInfo) -> Unit) {
     companion object {
         var clientHandlers = mutableMapOf<String, ClientHandler>()
+        var clientKeys = mutableMapOf<String, Triple<SecretKey, SecretKey, ByteArray>>()
     }
     //TODO: also test with BufferReader and BufferWriter
     private lateinit var _outputStream: DataOutputStream
     private lateinit var _inputStream: DataInputStream
+    private lateinit var _keys: Triple<SecretKey, SecretKey, ByteArray>
+    private lateinit var _security: Security
 
     init {
         try {
             this._outputStream = DataOutputStream(_socket.getOutputStream())
             this._inputStream = DataInputStream(_socket.getInputStream())
             ClientHandler.clientHandlers[this._socket.inetAddress.toString()] = this
+            this.pickupKeys()
+            this._security = Security(this._keys.first, this._keys.second, this._keys.third)
 
             //TODO: change it to nonblocking operations
             Thread(
@@ -75,13 +82,32 @@ class ClientHandler (private val _socket: Socket, val addToView: (user: UserInfo
         }
     }
 
+    private fun pickupKeys() {
+        while (true)
+        {
+            if(ClientHandler.clientKeys.contains(this._socket.inetAddress.toString()))
+            {
+                this._keys = ClientHandler.clientKeys[this._socket.inetAddress.toString()]!!
+                ClientHandler.clientKeys.remove(this._socket.inetAddress.toString())
+                break
+            }
+        }
+    }
+
     private fun receive() {
+        var received = ByteArray(8192)
         while (this._socket.isConnected) {
             lateinit var deserialized: BaseMessage
             try {
-                var message = _inputStream.readUTF()
+                val bytesRead = this._inputStream.read(received)
+                val message = received.copyOf(bytesRead)
+
+                val encryptedMsg = this._security
+                    .extractMsgFromHmac(message)
+                val decryptedMsg = this._security.decrypt(encryptedMsg)
+
                 val json = Json { encodeDefaults = true }
-                deserialized = json.decodeFromString<BaseMessage>(message)
+                deserialized = json.decodeFromString<BaseMessage>(decryptedMsg)
             }
             catch (e: kotlinx.serialization.SerializationException) {
                 BugRepoter.log("error in deserialization ${e.message}")
@@ -92,6 +118,10 @@ class ClientHandler (private val _socket: Socket, val addToView: (user: UserInfo
                 closeEveryThing()
                 break
             }
+            catch (e: Exception) {
+                BugRepoter.log("error occurred in receiving message ${e.message}")
+                continue
+            }
 
             this.handleReceivedMsg(deserialized)
         }
@@ -101,7 +131,9 @@ class ClientHandler (private val _socket: Socket, val addToView: (user: UserInfo
         val worker = Runnable {
             val json = Json { encodeDefaults = true }
             val serialized = json.encodeToString(msg)
-            _outputStream.writeUTF(serialized)
+            //TODO:change it to writeUTF()
+            val macEncrypted = this._security.encryptAddHmac(serialized)
+            _outputStream.write(macEncrypted, 0, macEncrypted.size)
         }
         threadPool.run(worker)
     }
