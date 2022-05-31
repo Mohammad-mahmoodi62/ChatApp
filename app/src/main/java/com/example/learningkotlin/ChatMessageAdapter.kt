@@ -5,7 +5,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.ListAdapter
 import android.widget.TextView
-import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 
 class ChatMessageAdapter() : ListAdapter<ChatMessage, RecyclerView.ViewHolder>(ChatDiffItemCallback()) {
@@ -50,7 +49,7 @@ class ChatMessageAdapter() : ListAdapter<ChatMessage, RecyclerView.ViewHolder>(C
             fun inflateFrom(parent: ViewGroup): ChatMessageAdapter.SentViewHolder {
                 val layoutInflater = LayoutInflater.from(parent.context)
                 val view = layoutInflater
-                    .inflate(R.layout.chat_item_right, parent, false)
+                    .inflate(R.layout.chat_item_sender, parent, false)
                 return ChatMessageAdapter.SentViewHolder(view)
             }
         }
@@ -68,7 +67,7 @@ class ChatMessageAdapter() : ListAdapter<ChatMessage, RecyclerView.ViewHolder>(C
             fun inflateFrom(parent: ViewGroup): ChatMessageAdapter.ReceivedViewHolder {
                 val layoutInflater = LayoutInflater.from(parent.context)
                 val view = layoutInflater
-                    .inflate(R.layout.chat_item_left, parent, false)
+                    .inflate(R.layout.chat_item_receiver, parent, false)
                 return ChatMessageAdapter.ReceivedViewHolder(view)
             }
         }
