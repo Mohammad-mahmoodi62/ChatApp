@@ -31,18 +31,18 @@ object BugRepoter {
     fun log(msg: String) {
         if(!report)
             return
-        runBlocking {
-            launch {
-                val sdf = SimpleDateFormat("dd/M/yyyy hh:mm:ss")
-                var sendMsg = "{${DeviceName.getDeviceName()}}[${sdf.format(Date())}]: $msg"
-                val snd = DatagramPacket(
-                    sendMsg.toByteArray(),
-                    sendMsg.length,
-                    InetAddress.getByName("192.168.1.147"),
-                    3500
-                );
-                socket.send(snd)
-            }
+        val worker = Runnable {
+            val sdf = SimpleDateFormat("dd/M/yyyy hh:mm:ss")
+            var sendMsg = "{${DeviceName.getDeviceName()}}[${sdf.format(Date())}]: $msg"
+            val snd = DatagramPacket(
+                sendMsg.toByteArray(),
+                sendMsg.length,
+                InetAddress.getByName("192.168.1.147"),
+                3500
+            );
+            socket.send(snd)
         }
+        threadPool.run(worker)
+
     }
 }
