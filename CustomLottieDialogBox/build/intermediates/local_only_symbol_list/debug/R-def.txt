@@ -1,0 +1,15 @@
+R_DEF: Internal format may change without notice
+local
+font merienda_bold
+id loadingTextView
+id lottieAnimation
+id parentLayout
+layout custom_dialog_item
+raw balance_animation
+raw bubble_animation
+raw groove_animation
+raw loop_animation
+raw music_animation
+raw paperplane_animation
+raw rocket_animation
+raw spiral_animation

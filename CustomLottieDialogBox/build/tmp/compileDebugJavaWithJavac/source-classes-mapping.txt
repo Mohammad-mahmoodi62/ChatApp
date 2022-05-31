@@ -1,0 +1,7 @@
+com/siddydevelops/customlottiedialogbox/GraduallyTextView.java
+ com.siddydevelops.customlottiedialogbox.GraduallyTextView
+ com.siddydevelops.customlottiedialogbox.GraduallyTextView$1
+com/siddydevelops/customlottiedialogbox/CustomLottieDialog.java
+ com.siddydevelops.customlottiedialogbox.CustomLottieDialog
+com/siddydevelops/customlottiedialogbox/BuildConfig.java
+ com.siddydevelops.customlottiedialogbox.BuildConfig
