@@ -19,7 +19,7 @@ class RevealMessage() : BaseMessage()
 
 @Serializable
 @SerialName("identification-msg")
-class HereIAm() : BaseMessage()
+class HereIAm(val Info: UserInfo) : BaseMessage()
 
 
 @Serializable

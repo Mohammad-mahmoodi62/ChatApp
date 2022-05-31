@@ -5,9 +5,7 @@ import TcpServerSocket
 import UdpSocket
 import android.widget.TextView
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.liveData
 import com.jaredrummler.android.device.DeviceName
 import java.io.IOException
 import java.net.InetAddress
@@ -20,6 +18,7 @@ class ConnectionHandler {
     private var _tcpClientSocket = mutableMapOf<String, TcpClientSocket>()
     private var _tcpServerSocket: TcpServerSocket? = null
     /*temp section*/
+    var identifiedUsers = mutableMapOf<String, InetAddress>()
     private lateinit var textview: TextView
     private lateinit var fragment: Fragment
     private lateinit var userViewModel: UsersViewModel
@@ -83,6 +82,20 @@ class ConnectionHandler {
         return this.selfId
     }
 
+    fun connectToUser(user: UserInfo) {
+        val worker = Runnable {
+            this._udpSocket?.connectToUser(this.identifiedUsers[user.ID]!!)
+        }
+        threadPool.run(worker)
+    }
+
+    fun connectToUser(ip: String) {
+        val worker = Runnable {
+        this._udpSocket?.connectToUser(InetAddress.getByName(ip))
+        }
+        threadPool.run(worker)
+    }
+
 
     fun addClient(ipAddr: InetAddress, keys: Triple<SecretKey, SecretKey, ByteArray>) {
         lateinit var socket: TcpClientSocket
@@ -118,9 +131,17 @@ class ConnectionHandler {
             this._tcpClientSocket[ipAddr]?.sendMsg(msg)
     }
 
+    fun setFunAddFoundUser(addUser: (user: UserInfo) -> Unit) {
+        this._udpSocket?.setAddFoundUser(addUser)
+    }
+
     fun addUserToViewModel(user: UserInfo) {
         ConnectionHandler.addUserToConnectedList(user)
         this.userViewModel.addData(user)
+    }
+
+    fun updateUserViewModel() {
+
     }
 
     fun removeFromClientsMap(ip: String) {
