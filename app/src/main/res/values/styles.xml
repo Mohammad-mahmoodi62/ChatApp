@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="custom_fab">
+        <item name="android:background">@drawable/fab_label_background</item>
+        <item name="android:textColor">@color/secondary_color</item>
+    </style>
+    <style name="ToolbarColoredBackArrow">
+        <item name="android:textColorSecondary">@color/main_color</item>
+    </style>
+</resources>

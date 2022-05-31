@@ -7,6 +7,12 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-<!--   test for background f chat -->
-    <color name="colorPrimary">#2596be</color>
+    <!--   my colors -->
+    <color name="main_color">#28f4be</color>
+    <color name="main_color_pressed">#B328f4be</color>
+    <color name="main_background">#121619</color>
+    <color name="secondary_background">#20282b</color>
+    <color name="secondary_color">#e3e1e1</color>
+    <color name="sender_font">#1a1919</color>
+    <color name="transparent_secondary_color">#40e3e1e1</color>
 </resources>
