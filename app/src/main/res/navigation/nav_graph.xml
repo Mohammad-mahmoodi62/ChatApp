@@ -15,6 +15,26 @@
             android:id="@+id/action_userListFragment_to_ChatFragment"
             app:destination="@id/ChatFragment"
             />
+        <action
+            android:id="@+id/action_userListFragment_to_findUsersFragment"
+            app:enterAnim="@anim/from_left"
+            app:destination="@+id/findUsersFragment"
+            />
+    </fragment>
+
+    <fragment
+        android:id="@+id/findUsersFragment"
+        android:name="com.example.learningkotlin.FindUsersFragment"
+        android:label="fragment_find_users"
+        tools:layout="@layout/fragment_find_users">
+
+        <action
+            android:id="@+id/action_findUsersFragment_to_userListFragment"
+            app:destination="@id/userListFragment"
+            app:exitAnim="@anim/from_left"
+            app:popUpTo="@id/userListFragment"
+            app:popUpToInclusive="true" />
+
     </fragment>
 
     <fragment

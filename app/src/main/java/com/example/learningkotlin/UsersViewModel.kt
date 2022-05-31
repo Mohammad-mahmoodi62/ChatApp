@@ -20,7 +20,7 @@ class UsersViewModel : ViewModel() {
         if(currentValue == null)
             currentValue = mutableListOf(user)
         else
-        currentValue?.add(user)
+            currentValue.add(user)
         _userList.postValue(currentValue!!)
     }
 
