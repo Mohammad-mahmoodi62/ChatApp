@@ -1,54 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    xmlns:fab="http://schemas.android.com/apk/res-auto">
 
-    <!--    <TextView-->
-    <!--        android:id="@+id/textView"-->
-    <!--        android:layout_width="wrap_content"-->
-    <!--        android:layout_height="wrap_content"-->
-    <!--        android:text="Hello World!"-->
-    <!--        app:layout_constraintBottom_toBottomOf="parent"-->
-    <!--        app:layout_constraintLeft_toLeftOf="parent"-->
-    <!--        app:layout_constraintRight_toRightOf="parent"-->
-    <!--        app:layout_constraintTop_toTopOf="parent" />-->
-
-    <!--    <EditText-->
-    <!--        android:id="@+id/userinput"-->
-    <!--        android:layout_width="wrap_content"-->
-    <!--        android:layout_height="wrap_content"-->
-    <!--        android:hint="enter your text"-->
-    <!--        app:layout_constraintBottom_toTopOf="@+id/textView"-->
-    <!--        app:layout_constraintEnd_toEndOf="parent"-->
-    <!--        app:layout_constraintStart_toStartOf="parent"-->
-    <!--        app:layout_constraintTop_toTopOf="parent" />-->
 
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/found_users_list"
+        android:id="@+id/chat_user_recyclerView"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
+        android:layout_height="match_parent"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-        app:layout_constraintBottom_toTopOf="@+id/find_users"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/debugger" />
+        android:background="@color/main_background"/>
 
-    <Button
-        android:id="@+id/find_users"
+    <toan.android.floatingactionmenu.FloatingActionsMenu
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="find users"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:fab_addButtonColorPressed="@color/main_color_pressed"
+        fab:fab_menuIcon="@drawable/ic_fab_menu"
+        app:fab_addButtonColorNormal="@color/main_color"
+        app:fab_labelStyle="@style/custom_fab">
 
-    <Button
-        android:id="@+id/debugger"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="enable debugger"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        <toan.android.floatingactionmenu.FloatingActionButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/connect_ip_btn"
+            app:fab_icon="@drawable/ic_add_ip"
+            app:fab_size="mini"
+            app:fab_colorNormal="@color/main_color"
+            app:fab_addButtonColorPressed="@color/main_color_pressed"
+            app:fab_title="@string/ip_fab_button"/>
+
+        <toan.android.floatingactionmenu.FloatingActionButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/find_users_btn"
+            app:fab_icon="@drawable/ic_find_users"
+            app:fab_size="mini"
+            app:fab_colorNormal="@color/main_color"
+            app:fab_addButtonColorPressed="@color/main_color_pressed"
+            fab:fab_title="@string/users_fab_button" />
+    </toan.android.floatingactionmenu.FloatingActionsMenu>
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>
