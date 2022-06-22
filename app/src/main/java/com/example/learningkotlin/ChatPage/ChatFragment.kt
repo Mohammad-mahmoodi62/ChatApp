@@ -10,6 +10,7 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
+import android.widget.Toast
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.RecyclerView
@@ -34,18 +35,21 @@ class ChatFragment : Fragment() {
         val viewModelFactory = ChatViewModelFactory(currentUser!!.IP)
         val viewModel = ViewModelProvider(
             this, viewModelFactory).get(ChatViewModel::class.java)
-        //temp
-        (activity as? MainActivity)?.test?.setChatViewModel(viewModel)
 
         val adapter = ChatMessageAdapter()
 
         chatRecyclerView.adapter = adapter
 
-        adapter.selfId = (activity as? MainActivity)?.test?.getSelfId()!!
+        //TODO: add selfID
+        adapter.selfId = ConnectionHandler.selfID!!
 
         viewModel.msgList!!.observe(this.viewLifecycleOwner, Observer {
             it?.let {
                 adapter.submitList(it.toMutableList())
+                chatRecyclerView.post {
+                    Thread.sleep(4)
+                    chatRecyclerView.layoutManager?.scrollToPosition(it.size - 1)
+                }
             }
         })
 
@@ -76,13 +80,18 @@ class ChatFragment : Fragment() {
 
         sendBtn.setOnClickListener {
             val worker = Runnable {
-                val chatMsg = ChatMessage(userMsg.text.toString(),
-                    (activity as? MainActivity)?.test?.getSelfId().toString(),
-                    (activity as? MainActivity)?.test?.otherId.toString())
+                val chatMsg = ChatMessage(userMsg.text.toString(), adapter.selfId, currentUser!!.ID)
 
-                ConnectionHandler.addChatMsgToMap(currentUser!!.IP,chatMsg)
-                (activity as? MainActivity)?.test?.sendMsg(chatMsg, currentUser!!.IP)
-                this.activity?.runOnUiThread { userMsg.setText("") }
+                val result = ConnectionHandler.sendMsg(chatMsg, currentUser!!.IP)
+                this.activity?.runOnUiThread {
+                    userMsg.setText("")
+                    if(!result!!)
+                        Toast.makeText(this.context, "${currentUser.Name} is disconnected "
+                        + "cannot send Message", Toast.LENGTH_LONG).show()
+                    else
+                        ConnectionHandler.addChatMsgToMap(currentUser!!.IP,chatMsg)
+
+                }
             }
             threadPool.run(worker)
         }

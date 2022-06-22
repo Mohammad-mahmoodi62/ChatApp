@@ -32,7 +32,7 @@ class FindUsersFragment : Fragment() {
         this.showAnimation()
 
         val viewModel = ViewModelProvider(this).get(FindUsersViewModel::class.java)
-        (activity as MainActivity).test?.setFunAddFoundUser{
+        ConnectionHandler.setFunAddFoundUser{
                 user -> viewModel.addData(user)
         }
 
@@ -59,13 +59,13 @@ class FindUsersFragment : Fragment() {
                     )
                     this.findNavController().popBackStack()
 
-                    (activity as MainActivity).test?.connectToUser(userId)
+                    ConnectionHandler.connectToUser(userId)
                     viewModel.onUserNavigated()
                 }
             }
         })
 
-        (activity as MainActivity).test?.findUsers()
+        ConnectionHandler.findUsers()
 
         return view
     }

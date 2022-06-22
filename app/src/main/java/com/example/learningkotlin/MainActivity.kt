@@ -15,14 +15,12 @@ import de.hdodenhof.circleimageview.CircleImageView
 
 class MainActivity : AppCompatActivity() {
 
-    var test: ConnectionHandler? = null
     lateinit var toolbar: Toolbar
     lateinit var toolbarText: TextView
     lateinit var toolbarImage: CircleImageView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         DeviceName.init(this)
-        this.test = ConnectionHandler()
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
