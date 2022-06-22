@@ -100,6 +100,10 @@ class ClientHandler (private val _socket: Socket, val addToView: (user: UserInfo
             lateinit var deserialized: BaseMessage
             try {
                 val bytesRead = this._inputStream.read(received)
+                if(bytesRead < 0) {
+                    this.closeEveryThing()
+                    break
+                }
                 val message = received.copyOf(bytesRead)
 
                 val encryptedMsg = this._security
@@ -115,13 +119,19 @@ class ClientHandler (private val _socket: Socket, val addToView: (user: UserInfo
             }
             catch (e: java.io.EOFException) {
                 BugRepoter.log("client disconnected ${e.message}")
-                closeEveryThing()
+                this.closeEveryThing()
                 break
             }
             catch (e: Exception) {
                 BugRepoter.log("error occurred in receiving message ${e.message}")
+                this.closeEveryThing()
+                break
+            }
+            catch (e: MacException) {
+                BugRepoter.log("error occurred in receiving message ${e.message}")
                 continue
             }
+
 
             this.handleReceivedMsg(deserialized)
         }
@@ -159,7 +169,8 @@ class ClientHandler (private val _socket: Socket, val addToView: (user: UserInfo
             "greetings-server" -> {
                 (msg as HelloServer).user.IP = this._socket.inetAddress.toString()
                 this.addToView((msg as HelloServer).user)
-                val selfInfo = UserInfo(Name = DeviceName.getDeviceName(), ID = UUID.randomUUID().toString(), IP = "")
+                val selfInfo = UserInfo(Name = DeviceName.getDeviceName(),
+                    ID = ConnectionHandler.selfID!!, IP = "")
                 val greetingMsg = HelloClient(selfInfo)
                 this.sendMsg(greetingMsg as BaseMessage)
             }

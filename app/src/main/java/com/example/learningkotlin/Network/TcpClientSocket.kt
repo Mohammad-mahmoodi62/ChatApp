@@ -48,6 +48,10 @@ class TcpClientSocket(
             try {
                 //TODO:if possible chage it to readUTF()
                 val bytesRead = this._inputStream.read(received)
+                if(bytesRead < 0) {
+                    this.destroyObject()
+                    break
+                }
                 val message = received.copyOf(bytesRead)
 
                 val encryptedMsg = this._security
@@ -58,20 +62,24 @@ class TcpClientSocket(
                 deserialized = json.decodeFromString<BaseMessage>(decryptedMsg)
             }
             catch (e: kotlinx.serialization.SerializationException) {
-                //TODO: change print to logcat
-                println("error in deserialization ${e.message}")
+                BugRepoter.log("error in deserialization ${e.message}")
                 continue
             }
             catch (e: java.io.EOFException) {
-                //TODO: change print to logcat
-                println("client disconnected ${e.message}")
+                BugRepoter.log("client disconnected ${e.message}")
                 //TODO: make it work for every client
                 this.destroyObject()
                 break
             }
-            catch (e: Exception) {
+            catch (e: MacException) {
                 BugRepoter.log("error occurred in receiving message ${e.message}")
                 continue
+            }
+
+            catch (e: Exception) {
+                BugRepoter.log("error occurred in receiving message ${e.message}")
+                this.destroyObject()
+                break
             }
 
             this.handleReceivedMsg(deserialized)
@@ -100,7 +108,6 @@ class TcpClientSocket(
             val serialized = json.encodeToString(msg)
 
             val macEncrypted = this._security.encryptAddHmac(serialized)
-            val encrypted = this._security.extractMsgFromHmac(macEncrypted)
             _outputStream.write(macEncrypted, 0, macEncrypted.size)
         }
         threadPool.run(worker)

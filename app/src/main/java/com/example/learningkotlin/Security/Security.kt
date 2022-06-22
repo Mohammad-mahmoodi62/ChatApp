@@ -59,7 +59,9 @@ class Security(val _encryptionKey: SecretKey, val _macKey:SecretKey, val _iv: By
         if (this.verifyHmac256(msg))
             return msg.copyOf(msg.size - 32)
         else
-            throw Exception("hmac doesn't match")
+            throw MacException("hmac doesn't match")
     }
 }
+
+class MacException(message:String): Exception(message)
 
