@@ -3,8 +3,12 @@ package com.example.learningkotlin
 import androidx.recyclerview.widget.DiffUtil
 
 class UserDiffItemCallback : DiffUtil.ItemCallback<UserInfo>() {
-    override fun areContentsTheSame(oldItem: UserInfo, newItem: UserInfo)
-        = (oldItem.ID == newItem.ID && oldItem.Name == newItem.Name )
+    override fun areContentsTheSame(oldItem: UserInfo, newItem: UserInfo) : Boolean
+    {
+        return (oldItem.lastMsg == newItem.lastMsg )
+    }
 
-    override fun areItemsTheSame(oldItem: UserInfo, newItem: UserInfo) = (oldItem.ID == newItem.ID)
+    override fun areItemsTheSame(oldItem: UserInfo, newItem: UserInfo) : Boolean {
+        return (oldItem.ID == newItem.ID)
+    }
 }

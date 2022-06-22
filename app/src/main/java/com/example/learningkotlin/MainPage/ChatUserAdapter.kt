@@ -20,6 +20,7 @@ class ChatUserAdapter(val clickListener: (UserID: String) -> Unit) : ListAdapter
     class FoundUserViewHolder(val rootView: CardView)
         : RecyclerView.ViewHolder(rootView) {
         private val userName: TextView = itemView.findViewById(R.id.chat_user_name)
+        private val lastMsg: TextView = itemView.findViewById(R.id.last_message)
 
             companion object {
                 fun inflateFrom(parent: ViewGroup): FoundUserViewHolder {
@@ -32,6 +33,7 @@ class ChatUserAdapter(val clickListener: (UserID: String) -> Unit) : ListAdapter
 
         fun bind(user: UserInfo, clickListener: (UserID: String) -> Unit) {
             this.userName.text  = user.Name
+            this.lastMsg.text = user.lastMsg
             rootView.setOnClickListener {
                 clickListener(user.ID)
             }
