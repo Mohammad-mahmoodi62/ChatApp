@@ -9,7 +9,7 @@ import androidx.recyclerview.widget.RecyclerView
 
 class ChatMessageAdapter() : ListAdapter<ChatMessage, RecyclerView.ViewHolder>(ChatDiffItemCallback()) {
 
-    var selfId: Int = 0
+    lateinit var selfId: String
 
     val ITEM_RECEIVED = 1
     val ITEM_SENT = 2
@@ -34,7 +34,7 @@ class ChatMessageAdapter() : ListAdapter<ChatMessage, RecyclerView.ViewHolder>(C
     override fun getItemViewType(position: Int): Int {
         val currentMsg = getItem(position)
 
-        if(this.selfId.toString() == currentMsg.senderId)
+        if(this.selfId == currentMsg.senderId)
             return ITEM_SENT
         else
             return ITEM_RECEIVED
