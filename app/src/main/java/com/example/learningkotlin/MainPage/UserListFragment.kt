@@ -21,6 +21,7 @@ class UserListFragment : Fragment() {
     private lateinit var _findUsersBtn: FloatingActionButton
     private lateinit var _connectByIpBtn: FloatingActionButton
     private lateinit var _customLottieDialog: CustomLottieDialog
+    private var _oldListSize = 0
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -54,8 +55,13 @@ class UserListFragment : Fragment() {
         this._connectByIpBtn = view.findViewById(R.id.connect_ip_btn)
 
         val viewModel = ViewModelProvider(this).get(UsersViewModel::class.java)
-        //tempt
-        (activity as? MainActivity)?.test?.setUserViewModel(viewModel)
+
+        ConnectionHandler.setAddUserToViewModelFun{
+            user -> viewModel.addData(user)
+        }
+        ConnectionHandler.setUpdateUserFun {
+            newUserID, lastMsg -> viewModel.updateData(newUserID, lastMsg)
+        }
 
         val adapter = ChatUserAdapter { UserID ->
             viewModel.onUserClicked(UserID)
@@ -66,7 +72,9 @@ class UserListFragment : Fragment() {
         viewModel.userList.observe(this.viewLifecycleOwner , Observer {
             it?.let {
                 adapter.submitList(it.toMutableList())
-                this.dismissWaitingDialog()
+                if(this._oldListSize != it.size)
+                    this.dismissWaitingDialog()
+                this._oldListSize = it.size
             }
         })
 
@@ -114,7 +122,7 @@ class UserListFragment : Fragment() {
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.ip_menu, menu)
-        menu.findItem(R.id.show_ip).title = "IP: ${(activity as MainActivity).test?._udpSocket?.selfIP}"
+        menu.findItem(R.id.show_ip).title = "IP: ${ConnectionHandler._udpSocket?.selfIP}"
     }
 
 
@@ -137,7 +145,7 @@ class UserListFragment : Fragment() {
         val enteredIP = dialogView.findViewById<EditText>(R.id.entered_ip)
         connectBtn.setOnClickListener {
             if(validateIp(enteredIP.text.toString())) {
-                (activity as MainActivity).test?.connectToUser(enteredIP.text.toString())
+                ConnectionHandler.connectToUser(enteredIP.text.toString())
                 this.showWaitingDialog()
             }
             mAlertDialog.dismiss()

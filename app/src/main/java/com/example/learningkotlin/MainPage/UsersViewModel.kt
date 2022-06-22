@@ -24,6 +24,16 @@ class UsersViewModel : ViewModel() {
         _userList.postValue(currentValue!!)
     }
 
+    fun updateData(newUserID: String, lastMsg: String) {
+        for(oldUser in 0 until _userList.value!!.size)
+            if(_userList.value!![oldUser].ID == newUserID) {
+                val currentValue: MutableList<UserInfo>? = _userList.value as MutableList<UserInfo>?
+                currentValue?.set(oldUser, UserInfo(newUserID, currentValue[oldUser].Name
+                                    , currentValue[oldUser].IP, lastMsg))
+                _userList.postValue(currentValue!!)
+            }
+    }
+
     fun onUserClicked(userID: String) {
         _navigateToUer.value = userID
     }
